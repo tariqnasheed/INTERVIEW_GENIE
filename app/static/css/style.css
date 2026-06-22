@@ -1,0 +1,35 @@
+/* style.css – Custom styles for InterviewGenie, including dark mode */
+/* Body and general transitions */
+body {
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode overrides (when data-bs-theme="dark" is set on html) */
+[data-bs-theme="dark"] body {
+    background-color: #212529;
+    color: #f8f9fa;
+}
+
+/* Card styling for modern look */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Accordion button styling */
+.accordion-button {
+    font-weight: 500;
+}
+
+/* Loading spinner center */
+#loadingSpinner {
+    padding: 1rem 0;
+}
+
+/* Gradient hero on landing */
+.hero-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

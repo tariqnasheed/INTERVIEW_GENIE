@@ -1,0 +1,59 @@
+# .gitignore for InterviewGenie
+# Python & Flask project ignore rules
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Distribution / packaging
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# uv lock file (kept for reproducibility, but can comment out if you prefer)
+# uv.lock  # keep it to pin exact versions
+
+# Environment variables (contains API keys, SECRET_KEY, etc.)
+.env
+
+# SQLite database files
+instance/
+*.db
+*.sqlite3
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# MyPy typing stubs
+.mypy_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# WeasyPrint temporary files
+*.pdf_tmp/

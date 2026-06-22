@@ -1,0 +1,33 @@
+# pyproject.toml – InterviewGenie (DeepSeek-powered)
+# All dependencies for running the application are listed here.
+
+[project]
+name = "interview-genie"
+version = "1.0.0"
+description = "AI-powered mock interview question predictor using DeepSeek API"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "you@example.com"}
+]
+readme = "README.md"
+keywords = ["flask", "interview", "ai", "deepseek", "questions", "generator"]
+
+dependencies = [
+    "flask>=3.0,<4.0",
+    "flask-sqlalchemy>=3.1,<4.0",
+    "flask-login>=0.6,<1.0",
+    "flask-wtf>=1.2,<2.0",
+    "python-dotenv>=1.0,<2.0",
+    "openai>=1.0,<2.0",           # For DeepSeek (OpenAI-compatible API)
+    "weasyprint>=60.2",          # PDF generation
+    "werkzeug>=3.0,<4.0",          # Password hashing utilities
+    "email-validator>=2.0,<3.0",   # Email validation for forms
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]

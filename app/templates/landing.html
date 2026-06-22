@@ -1,0 +1,51 @@
+<!-- landing.html – Hero landing page for unauthenticated users -->
+{% extends "base.html" %}
+{% block title %}Welcome to InterviewGenie{% endblock %}
+{% block content %}
+<div class="px-4 py-5 my-5 text-center">
+    <h1 class="display-4 fw-bold text-primary">Ace Your Next Interview</h1>
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4">
+            Paste any job posting and let AI generate a personalised set of interview questions
+            with detailed answers, explanations, and real-world references. Save, share, or
+            print your preparation materials – all in one place.
+        </p>
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-primary btn-lg px-4 gap-3">Get Started Free</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg px-4">Log In</a>
+        </div>
+    </div>
+</div>
+
+<div class="container px-4 py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-brain fa-2x text-primary mb-3"></i>
+                    <h5 class="card-title">AI-Powered</h5>
+                    <p class="card-text">Uses advanced language models to predict exactly what interviewers ask.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-file-pdf fa-2x text-danger mb-3"></i>
+                    <h5 class="card-title">Export & Share</h5>
+                    <p class="card-text">Download PDFs, print your study guides, or share a public link.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-lock fa-2x text-success mb-3"></i>
+                    <h5 class="card-title">Private & Secure</h5>
+                    <p class="card-text">Your data is encrypted and only accessible by you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

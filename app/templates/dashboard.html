@@ -1,0 +1,255 @@
+<!-- dashboard.html – Main dashboard for input and viewing Q&A. Also used when viewing a saved chat. -->
+{% extends "base.html" %}
+{% block title %}Dashboard – InterviewGenie{% endblock %}
+{% block head %}
+<!-- Include any additional head elements (none needed) -->
+{% endblock %}
+{% block content %}
+<!-- Hidden CSRF token for AJAX save -->
+<input type="hidden" id="csrf_token" value="{{ csrf_token() }}">
+
+<div class="row">
+    <!-- Left panel: input form (if not viewing a saved chat, or allow editing?) -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fa-solid fa-pen-to-square"></i> Job Details</h5>
+            </div>
+            <div class="card-body">
+                <!-- The form is not submitted traditionally; we use AJAX. Just need CSRF token. -->
+                <div class="mb-3">
+                    <label for="job_description" class="form-label">Job Description</label>
+                    <textarea id="job_description" class="form-control" rows="5" placeholder="Paste the full job description...">{{ chat.job_description if chat else '' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="company_profile" class="form-label">Company Profile / Name</label>
+                    <input type="text" id="company_profile" class="form-control" placeholder="e.g., Google, a leading tech company" value="{{ chat.company_profile if chat else '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="responsibilities" class="form-label">Responsibilities</label>
+                    <textarea id="responsibilities" class="form-control" rows="3" placeholder="List key responsibilities...">{{ chat.responsibilities if chat else '' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="requirements" class="form-label">Candidate Requirements</label>
+                    <textarea id="requirements" class="form-control" rows="3" placeholder="Skills, experience, education...">{{ chat.requirements if chat else '' }}</textarea>
+                </div>
+                <button id="generateBtn" class="btn btn-success w-100" onclick="generateQuestions()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Questions
+                </button>
+                <div id="loadingSpinner" class="text-center mt-2 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Generating...</span>
+                    </div>
+                    <p class="mt-1">Generating your questions...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel: Q&A display area -->
+    <div class="col-lg-8">
+        <div id="resultsContainer">
+            {% if qa_data %}
+                <!-- Show previously loaded Q&A (from history view) -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>Generated Questions</h4>
+                    {% if chat %}
+                        <!-- Action buttons for saved chat -->
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="shareChat({{ chat.id }})"><i class="fa-solid fa-share-nodes"></i> Share</button>
+                            <a href="{{ url_for('main.download_pdf', chat_id=chat.id) }}" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="accordion" id="qaAccordion">
+                    {% for item in qa_data %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="false">
+                                    Q{{ loop.index }}: {{ item.question }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#qaAccordion">
+                                <div class="accordion-body">
+                                    <h6>Answer</h6>
+                                    <p>{{ item.answer | safe }}</p>
+                                    <h6>Explanation</h6>
+                                    <p>{{ item.explanation | safe }}</p>
+                                    {% if item.image_url %}
+                                        <img src="{{ item.image_url }}" alt="{{ item.image_description }}" class="img-fluid mb-2">
+                                    {% endif %}
+                                    {% if item.references %}
+                                        <h6>References</h6>
+                                        <ul>
+                                            {% for ref in item.references %}
+                                                <li><a href="{{ ref.url }}" target="_blank">{{ ref.title }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                    <!-- Per-QA action buttons (print, etc.) can be added if desired -->
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Placeholder when no Q&A yet -->
+                <div class="card shadow text-center p-5" id="noResultPlaceholder">
+                    <i class="fa-solid fa-robot fa-3x text-muted mb-3"></i>
+                    <h5>Your generated questions will appear here</h5>
+                    <p class="text-muted">Fill in job details and click "Generate Questions".</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Global variable to hold the currently displayed Q&A data (for saving, sharing, etc.)
+let currentQAData = null;
+let currentChatId = {{ chat.id if chat else 'null' }};
+
+// Function to build the Q&A accordion dynamically from JSON data
+function displayQAData(data) {
+    currentQAData = data;
+    currentChatId = null;  // new unsaved data
+    let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Generated Questions</h4>
+            <div>
+                <button class="btn btn-outline-primary btn-sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="saveChat()"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+            </div>
+        </div>
+        <div class="accordion" id="qaAccordion">
+    `;
+    data.forEach((item, index) => {
+        html += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading${index}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}" aria-expanded="false">
+                        Q${index+1}: ${item.question}
+                    </button>
+                </h2>
+                <div id="collapse${index}" class="accordion-collapse collapse" data-bs-parent="#qaAccordion">
+                    <div class="accordion-body">
+                        <h6>Answer</h6>
+                        <p>${item.answer}</p>
+                        <h6>Explanation</h6>
+                        <p>${item.explanation}</p>
+                        ${item.image_url ? `<img src="${item.image_url}" alt="${item.image_description}" class="img-fluid mb-2">` : ''}
+                        ${item.references && item.references.length ? `
+                            <h6>References</h6>
+                            <ul>${item.references.map(ref => `<li><a href="${ref.url}" target="_blank">${ref.title}</a></li>`).join('')}</ul>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    document.getElementById('resultsContainer').innerHTML = html;
+}
+
+// AJAX call to generate questions
+async function generateQuestions() {
+    const job_desc = document.getElementById('job_description').value.trim();
+    const company = document.getElementById('company_profile').value.trim();
+    const resp = document.getElementById('responsibilities').value.trim();
+    const reqs = document.getElementById('requirements').value.trim();
+    if (!job_desc && !company && !resp && !reqs) {
+        alert('Please fill at least one field.');
+        return;
+    }
+
+    // Show loading spinner, disable button
+    document.getElementById('loadingSpinner').classList.remove('d-none');
+    document.getElementById('generateBtn').disabled = true;
+
+    try {
+        const csrf = document.getElementById('csrf_token').value;
+        const response = await fetch('/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf
+            },
+            body: JSON.stringify({
+                job_description: job_desc,
+                company_profile: company,
+                responsibilities: resp,
+                requirements: reqs
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            displayQAData(result.data);
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    } finally {
+        document.getElementById('loadingSpinner').classList.add('d-none');
+        document.getElementById('generateBtn').disabled = false;
+    }
+}
+
+// Save the currently displayed Q&A to user history
+async function saveChat() {
+    if (!currentQAData) return;
+    const title = prompt('Give a title to this chat (optional):') || '';
+    const csrf = document.getElementById('csrf_token').value;
+    try {
+        const response = await fetch('/save_chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf
+            },
+            body: JSON.stringify({
+                qa_data: currentQAData,
+                job_description: document.getElementById('job_description').value,
+                company_profile: document.getElementById('company_profile').value,
+                responsibilities: document.getElementById('responsibilities').value,
+                requirements: document.getElementById('requirements').value,
+                title: title
+            })
+        });
+        const result = await response.json();
+        if (result.success) {
+            currentChatId = result.chat_id;
+            alert('Saved successfully!');
+            // Update action buttons to include share/PDF
+            location.reload();  // simple reload to show full actions
+        } else {
+            alert('Save failed: ' + result.error);
+        }
+    } catch (error) {
+        alert('Save error: ' + error.message);
+    }
+}
+
+// Share a saved chat
+async function shareChat(chatId) {
+    const csrf = document.getElementById('csrf_token').value;
+    try {
+        const response = await fetch(`/share_chat/${chatId}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrf }
+        });
+        const result = await response.json();
+        if (result.success) {
+            prompt('Share this link (expires in 7 days):', result.share_url);
+        } else {
+            alert('Share failed.');
+        }
+    } catch (error) {
+        alert('Share error: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

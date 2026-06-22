@@ -1,0 +1,43 @@
+<!-- pdf_template.html – Template for PDF generation, used by WeasyPrint -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        /* PDF-specific styling */
+        body { font-family: Arial, sans-serif; margin: 2cm; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #007bff; margin-bottom: 20px; padding-bottom: 10px; }
+        .header h1 { color: #007bff; margin: 0; }
+        .meta { font-size: 0.9em; color: #666; margin-top: 5px; }
+        .question-block { margin-bottom: 25px; page-break-inside: avoid; }
+        .question { font-weight: bold; font-size: 1.1em; background: #f8f9fa; padding: 8px; }
+        .answer, .explanation { margin: 10px 0; }
+        .references { font-size: 0.9em; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>InterviewGenie</h1>
+        <div class="meta">Prepared for: {{ user_name }} | Date: {{ date }}</div>
+        <div class="meta">Role: {{ title }}</div>
+    </div>
+    {% for item in questions %}
+    <div class="question-block">
+        <div class="question">Q{{ loop.index }}: {{ item.question }}</div>
+        <div class="answer"><strong>Answer:</strong> {{ item.answer }}</div>
+        <div class="explanation"><strong>Explanation:</strong> {{ item.explanation }}</div>
+        {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.image_description }}">{% endif %}
+        {% if item.references %}
+        <div class="references">
+            <strong>References:</strong>
+            <ul>
+                {% for ref in item.references %}<li><a href="{{ ref.url }}">{{ ref.title }}</a></li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>

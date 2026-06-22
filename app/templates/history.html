@@ -1,0 +1,73 @@
+<!-- history.html – Shows saved chat history with search and pagination -->
+{% extends "base.html" %}
+{% block title %}History – InterviewGenie{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="fa-solid fa-clock-rotate-left"></i> Your Saved Q&A History</h2>
+
+<!-- Search form -->
+<form method="GET" action="{{ url_for('history.history') }}" class="row g-2 mb-4">
+    <div class="col-md-8">
+        <input type="text" name="search" class="form-control" placeholder="Search by title or keyword..." value="{{ search }}">
+    </div>
+    <div class="col-md-4">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
+
+{% if chats.items %}
+<div class="row">
+    {% for chat in chats.items %}
+    <div class="col-md-6 mb-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ chat.title or "Untitled" }}</h5>
+                <p class="card-text text-muted small">
+                    Created: {{ chat.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </p>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('history.view_chat', chat_id=chat.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                    <!-- Inline rename form -->
+                    <form method="POST" action="{{ url_for('history.rename_chat', chat_id=chat.id) }}" class="d-flex">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="title" class="form-control form-control-sm" placeholder="New name" value="{{ chat.title or '' }}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm ms-1">Rename</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('history.delete_chat', chat_id=chat.id) }}" onsubmit="return confirm('Delete this entry?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+<nav aria-label="History pagination">
+    <ul class="pagination justify-content-center">
+        {% if chats.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('history.history', page=chats.prev_num, search=search) }}">Previous</a>
+            </li>
+        {% endif %}
+        {% for page_num in chats.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == chats.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('history.history', page=page_num, search=search) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        {% if chats.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('history.history', page=chats.next_num, search=search) }}">Next</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% else %}
+    <div class="alert alert-info">No saved Q&A yet. Start by generating one!</div>
+{% endif %}
+{% endblock %}

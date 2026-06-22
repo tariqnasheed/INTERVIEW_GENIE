@@ -1,0 +1,36 @@
+<!-- view_shared.html – Public view of a shared Q&A set (no login needed) -->
+{% extends "base.html" %}
+{% block title %}Shared Interview Q&A{% endblock %}
+{% block content %}
+{% if expired %}
+    <div class="alert alert-warning text-center">
+        <h4>This shared link has expired.</h4>
+        <p>The link was valid for 7 days from creation.</p>
+    </div>
+{% else %}
+    <h2 class="mb-4">Shared Interview Preparation</h2>
+    <p class="text-muted">Generated for a job posting. Feel free to browse.</p>
+    <div class="accordion" id="sharedAccordion">
+        {% for item in qa_data %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="s-heading{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#s-collapse{{ loop.index }}">
+                        Q{{ loop.index }}: {{ item.question }}
+                    </button>
+                </h2>
+                <div id="s-collapse{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#sharedAccordion">
+                    <div class="accordion-body">
+                        <h6>Answer</h6><p>{{ item.answer | safe }}</p>
+                        <h6>Explanation</h6><p>{{ item.explanation | safe }}</p>
+                        {% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.image_description }}" class="img-fluid">{% endif %}
+                        {% if item.references %}
+                            <h6>References</h6>
+                            <ul>{% for ref in item.references %}<li><a href="{{ ref.url }}">{{ ref.title }}</a></li>{% endfor %}</ul>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
